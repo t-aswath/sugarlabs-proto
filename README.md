@@ -100,5 +100,5 @@ This prototype successfully demonstrates a **proof of concept** for an AI-powere
 
 **Developed by:** t-aswath
 - [github](https://github.com/t-aswath)
-- [matrix](@t-aswath:matrix.org)
+- matrix: @t-aswath:matrix.org
 - [email](mailto:aswathscid@gmail.com)
