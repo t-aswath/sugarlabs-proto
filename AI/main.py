@@ -11,6 +11,6 @@ class Body(BaseModel):
 
 
 @app.post("/")
-async def prett(request: Body):
+async def predict(request: Body):
     result = invoke(request.text)
     return {"message": result}
