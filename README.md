@@ -2,7 +2,7 @@
 # Add an AI-assistant to the Write Activity Prototype
 
 ## Overview
-This project is a **Add an AI-assistant to the Write Activity Prototype** that demonstrates the complete flow of an AI-powered grammar correction tool. The system consists of a **GTK 3.0-based desktop application** that interacts with a **FastAPI backend** powered by a **Hugging Face LLM** via LangChain. The primary goal of this prototype is to validate the workflow from **user input to backend processing and back to the user** while showcasing the feasibility of an AI-based grammar correction system.
+This project is a **Add an AI-assistant to the Write Activity Prototype** that demonstrates the complete flow of an AI-powered grammar correction tool. The system consists of a **GTK 3.0-based desktop application** that interacts with a **FastAPI backend** powered by a **Ollama (llama3.2:3B)** via LangChain and Ollama-python. The primary goal of this prototype is to validate the workflow from **user input to backend processing and back to the user** while showcasing the feasibility of an AI-based grammar correction system.
 
 ## Table of Contents
 
@@ -18,83 +18,85 @@ This project is a **Add an AI-assistant to the Write Activity Prototype** that d
 10. [Conclusion](#conclusion)
 
 ## Demo
-- [youtube](https://youtu.be/bcr_ln06yr8) 
+- [Iteration 1 (youtube)](https://youtu.be/bcr_ln06yr8) 
+- [Iteration 2 (youtube)](https://youtu.be/g9cTgEII5sc) 
 
-## Features
-- **User Interface:** Built with GTK 3.0, featuring a text input box and a button to trigger the grammar check.
-- **Backend API:** Developed with FastAPI, exposing an endpoint on port `8000` to handle requests.
-- **Grammar Correction:** Identifies incorrect sentences and suggests corrections with explanations.
-- **Real-time Updates:** The corrected text replaces the original input in the text box after processing.
-- **Notifications:** Displays informative messages about grammar corrections or errors encountered.
+# Features
+- **Real-time grammar checking**: Detects errors as the user types.
+- **AI-powered suggestions**: Uses a language model to provide corrections.
+- **Sentence highlighting**: Marks incorrect sentences for easy identification.
+- **Sidebar results panel**: Displays grammar errors and explanations.
 
-## Tech Stack
-- **Frontend:** GTK 3.0 (Python)
-- **Backend:** FastAPI
-- **AI Processing:** Hugging Face LLM, LangChain
-- **Communication:** HTTP requests (requests library)
-- **Parsing & Formatting:** Regular expressions (re module)
+# Tech Stack
+- **Backend**: FastAPI, Python, Ollama (Llama3.2:3B model)
+- **Frontend**: GTK (PyGObject)
+- **AI Processing**: LangChain, Async Ollama Client
 
-## How It Works
-1. **User Input:** The user enters a sentence in the text box.
-2. **Grammar Check Trigger:** Clicking the "Check Grammar" button sends the text to the FastAPI backend.
-3. **Backend Processing:**
-   - The input is formatted into a prompt using LangChain.
-   - The LLM analyzes the text and returns corrections if needed.
-   - If the sentence is correct, it returns "ok".
-4. **Response Handling:**
-   - If corrections are found, the parsed result is displayed in a pop-up.
-   - The corrected sentence replaces the original text in the input box.
-5. **User Interaction:** The user can modify the text and repeat the process as needed.
+# How It Works
+1. **User inputs text** into the GTK-based editor.
+2. **Text is monitored** for changes, triggering a grammar check when typing stops for a few seconds set to `3 sec` for dev purposes.
+3. **Grammar check request** is sent to a FastAPI backend running an AI model.
+4. **Model processes the text** and returns corrections in JSON format.
+5. **Results are displayed** in the sidebar, highlighting errors in the text editor.
 
-## Limitations
-- **Model Choice:** A free model from Hugging Face is used, limiting quality and control over responses.
-- **Unpredictability:** Model output may be inconsistent, potentially breaking the parsing logic.
-- **Limited Input Handling:** Designed for **single sentences only**; larger text inputs are not yet optimized.
-- **Future Improvements:** Plans to integrate a more robust model, improve UI design, and handle larger text inputs.
+# Achievements in Iteration 1
+- Implemented a **working grammar correction model** using LangChain and Ollama.
+- Designed a **GTK-based GUI** with an editable text area 
+- Set up **FastAPI backend** for handling grammar check requests.
 
-## Can Be Overcomed
+# Achievements in Iteration 2
+- **Integrated real-time typing detection** to automatically trigger grammar checks.
+- **Added** a **sidebar** for displaying results and **spinner** to indicate the status of the request.
+- **Enhanced text highlighting** for more accurate sentence correction display.
+- **Improved error handling** for server requests.
 
-With a **better model**, more **consistent and accurate responses** can be generated. This improvement alone will be sufficient to fulfill the completeness of this prototype.
+# Limitations
+- **Model response time**: The AI model processing may introduce delays.
+- **Lack of debounce/throttle**: Rapid input changes trigger excessive requests.
+- **Overlapping triggers**: Multiple triggers can cause multiple requests.
+- **Result formatting**: The JSON response could be more user-friendly.
+- **Auto-complete suggestions**: Currently, the model only provides corrections.
+- **Sentence indexing**: The model may not always index sentences correctly.
 
-## Installation & Setup
-### 1. Set Up Virtual Environment
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
+# TODO
+- [ ] Implement debounce/throttle mechanism for efficiency.
+- [ ] Improve handling of overlapping trrigers.
+- [ ] Enhance result formatting for better readability.
+- [ ] Add auto-complete suggestions.
+- [ ] Improve accuracy of sentence indexing.
 
-### 2. Install Dependencies
-```bash
+# Installation & Setup
+```sh
+git clone <repo-url>
+
+cd <repo-name>
+
 cd AI
-pip install -r requirements.txt
-```
 
-### 3. Running the Application
-#### Start the Backend
-```bash
-fastapi dev main.py
-```
-#### Start the Frontend
-```bash
+bash setup.sh
+
 cd ..
-python3 window.py
+
+bash run.sh
+
 ```
 
-Alternatively, you can use the provided `run.sh` script to streamline the setup process. Ensure that the commands align with your machine’s environment before executing.
-
-## Project Structure
+# Project Structure
 ```
-├── AI/
-│   ├── main.py  # FastAPI backend
-│   ├── model.py # AI model integration
-│   ├── requirements.txt # Python dependencies
-├── window.py  # GTK frontend
-├── run.sh  # Script to start the application
-├── README.md  # Project documentation (this file)
+AI/                    # Backend
+  ├── main.py          # FastAPI server
+  ├── model.py         # AI model integration
+  ├── requirements.txt # Dependencies
+.gitignore             # Git ignore rules
+README.md              # Project documentation
+run.sh                 # Shell script to run the project
+setup.sh               # Setup script
+TODO.md                # Task management
+window.py              # GTK-based GUI (frontend)
 ```
 
-## Conclusion
-This prototype successfully demonstrates a **proof of concept** for an AI-powered grammar correction system. The next iteration will focus on enhancing accuracy, supporting larger text inputs, and refining the UI/UX for a more seamless experience.
+# Conclusion
+This prototype successfully demonstrates a **proof of concept** for **Add an AI-assistant to the Write Activity** project
 
 ---
 

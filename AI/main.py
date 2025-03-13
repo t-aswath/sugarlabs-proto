@@ -12,5 +12,5 @@ class Body(BaseModel):
 
 @app.post("/")
 async def predict(request: Body):
-    result = invoke(request.text)
+    result = await invoke(request.text)
     return {"message": result}

@@ -1,6 +1,4 @@
 python3 -m venv .venv
 source .venv/bin/activate
-cd AI
 pip install -r requirements.txt
-cd ..
-bash run.sh
+fastapi dev main.py

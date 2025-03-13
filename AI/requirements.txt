@@ -1,3 +1,4 @@
 langchain
 gradio-client
 fastapi[standard]
+ollama
