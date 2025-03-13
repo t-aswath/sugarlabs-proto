@@ -12,7 +12,7 @@ This project is a **Add an AI-assistant to the Write Activity Prototype** that d
 4.  [Tech Stack](#tech-stack)
 5.  [How It Works](#how-it-works)
 6.  [Limitations](#limitations)
-7.  [Can be Overcomed](#can-be-overcomed)
+7.  [TODO](#todo)
 8.  [Installation & Setup](#installation--setup)
 9.  [Project Structure](#project-structure)
 10. [Conclusion](#conclusion)
