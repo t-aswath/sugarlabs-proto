@@ -1,16 +1,18 @@
 from fastapi import FastAPI
+import json
 from model import invoke
-from pydantic import BaseModel
+from pdtypes import Body, Response
 
 
 app = FastAPI()
 
 
-class Body(BaseModel):
-    text: str
-
-
 @app.post("/")
-async def predict(request: Body):
+async def predict(request: Body) -> Response:
     result = await invoke(request.text)
-    return {"message": result}
+    try:
+        response = json.loads(result.content)
+        return response
+    except json.JSONDecodeError:
+        return Response(suggestions=[])
+

@@ -1,4 +1,4 @@
 langchain
-gradio-client
+langchain-ollama
 fastapi[standard]
 ollama

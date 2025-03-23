@@ -1,6 +1,5 @@
 import gi
 import requests
-import json
 import time
 import threading
 
@@ -23,37 +22,92 @@ class MainWindow(Gtk.Window):
         self.create_sidebar()
         self.create_text_tags()
 
-        self.paned.set_position(int(0.7 * 1000))
+        self.paned.set_position(int(0.55 * 1000))
 
-    def notification_box(self, widget, data=None):
-        dialog = Gtk.MessageDialog(
-            transient_for=self,
-            flags=0,
-            message_type=Gtk.MessageType.INFO,
-            buttons=Gtk.ButtonsType.OK,
-            text="INFO",
-        )
-        dialog.format_secondary_text(data)
-        dialog.run()
-        print("[LOG]: INFO dialog closed")
+        self.suggestions = {}
 
-        dialog.destroy()
+    def replace_text(self, widget, event, index):
+        if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 1:
+            item = self.suggestions[index]
 
-    def apply_highlight(self, start_index, end_index):
-        start_iter = self.textbuffer.get_iter_at_offset(start_index)
-        end_iter = self.textbuffer.get_iter_at_offset(end_index)
+            start_iter = self.textbuffer.get_iter_at_mark(item["start"])
+            end_iter = self.textbuffer.get_iter_at_mark(item["end"])
 
+            self.textbuffer.delete(start_iter, end_iter)
+            self.textbuffer.insert(start_iter, item["correct"])
+
+            start_iter = self.textbuffer.get_iter_at_mark(item["start"])
+            end_iter = self.textbuffer.get_iter_at_mark(item["end"])
+
+            self.textbuffer.remove_tag_by_name("highlight", start_iter, end_iter)
+
+            widget.destroy()
+            if index in self.suggestions:
+                del self.suggestions[index]
+
+    def apply_highlight(self, item):
+        start_iter = self.textbuffer.get_iter_at_mark(item["start"])
+        end_iter = self.textbuffer.get_iter_at_mark(item["end"])
         self.textbuffer.apply_tag_by_name("highlight", start_iter, end_iter)
 
-    def update_sidebar(self, text):
-        self.sidebar_buffer.set_text(json.dumps(text, indent=4))
+    def update_sidebar(self, item, index):
+        label = Gtk.Label(
+            label=f"Original: {item["sentence"]}\n\nCorrected: {item["correct"]}\n\nReason: {item["reason"]}\n"
+        )
+        label.set_xalign(0)
+        label.set_justify(Gtk.Justification.LEFT)
+        label.set_line_wrap(True)
+
+        frame = Gtk.Frame()
+        frame.set_shadow_type(Gtk.ShadowType.OUT)
+        frame.set_margin_start(10)
+        frame.set_margin_end(10)
+        frame.set_hexpand(True)
+        frame.add(label)
+
+        event_box = Gtk.EventBox()
+        event_box.add(frame)
+        event_box.connect("button-press-event", self.replace_text, index)
+
+        return event_box
+
+    def clear_prev_results(self):
+        self.textbuffer.remove_all_tags(
+            self.textbuffer.get_start_iter(), self.textbuffer.get_end_iter()
+        )
+
+        self.suggestions = {}
+
+        for child in self.scrolledwindow.get_children():
+            self.scrolledwindow.remove(child)
 
     def handle_response(self, data):
-        GLib.idle_add(self.update_sidebar, data)
-        for item in data:
-            start = item["start"]
-            end = item["end"]
-            self.apply_highlight(start, end)
+        self.clear_prev_results()
+
+        self.container_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        self.container_box.set_halign(Gtk.Align.FILL)
+        self.container_box.set_hexpand(True)
+
+        for index, item in enumerate(data["suggestions"]):
+
+            start_iter = self.textbuffer.get_start_iter()
+
+            match = start_iter.forward_search(
+                item["sentence"], Gtk.TextSearchFlags.TEXT_ONLY, None
+            )
+            if match:
+                item["start"], item["end"] = match
+                item["start"] = self.textbuffer.create_mark(None, item["start"], True)
+                item["end"] = self.textbuffer.create_mark(None, item["end"], False)
+
+                self.apply_highlight(item)
+                self.container_box.pack_start(
+                    self.update_sidebar(item, index), False, False, 2
+                )
+                self.suggestions[index] = item
+
+        self.scrolledwindow.add(self.container_box)
+        self.scrolledwindow.show_all()
 
     def send_grammar_check_request(self, text):
         try:
@@ -61,11 +115,9 @@ class MainWindow(Gtk.Window):
             GLib.idle_add(self.spinner.start)
             response = requests.post("http://localhost:8000", json={"text": text})
             if response.status_code == 200:
-                data = response.json()["message"]
-                data = json.loads(data)
+                data = response.json()
                 GLib.idle_add(self.handle_response, data)
             else:
-                self.notification_box("Server Error")
                 print("[LOG]: ERROR Server Error")
         except Exception as e:
             print("[LOG]: ERROR", e)
@@ -82,11 +134,6 @@ class MainWindow(Gtk.Window):
         thread.start()
 
     def on_text_inserted(self, textbuffer, location, text, length):
-        if text == "\n":
-            print("[LOG]: Enter key pressed")
-            self.grammer_check(self.textview, self.textbuffer)
-            return
-
         print("[LOG]: Text inserted")
 
         self.last_typing_time = time.time()
@@ -95,7 +142,7 @@ class MainWindow(Gtk.Window):
         self.typing_timer = GLib.timeout_add(1000, self.detect_stopped_typing)
 
     def detect_stopped_typing(self):
-        if time.time() - self.last_typing_time >= 3:
+        if time.time() - self.last_typing_time >= 5:
             print("[LOG]: Typing stopped")
             self.typing_timer = None
             self.grammer_check(self.textview, self.textbuffer)
@@ -117,7 +164,7 @@ class MainWindow(Gtk.Window):
         self.textbuffer.connect("insert-text", self.on_text_inserted)
 
     def create_sidebar(self):
-        sidebar_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        sidebar_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
 
         self.sidebar_label = Gtk.Label(label="Grammar Check Results")
         sidebar_box.pack_start(self.sidebar_label, False, False, 5)
@@ -125,19 +172,13 @@ class MainWindow(Gtk.Window):
         self.spinner = Gtk.Spinner()
         sidebar_box.pack_start(self.spinner, False, False, 5)
 
-        scrolledwindow = Gtk.ScrolledWindow()
-        scrolledwindow.set_hexpand(True)
-        scrolledwindow.set_vexpand(True)
+        self.scrolledwindow = Gtk.ScrolledWindow()
+        self.scrolledwindow.set_hexpand(True)
+        self.scrolledwindow.set_vexpand(True)
 
-        self.sidebar_textview = Gtk.TextView()
-        self.sidebar_textview.set_editable(False)
-        self.sidebar_textview.set_wrap_mode(Gtk.WrapMode.WORD)
-        self.sidebar_buffer = self.sidebar_textview.get_buffer()
-        scrolledwindow.add(self.sidebar_textview)
+        sidebar_box.pack_start(self.scrolledwindow, True, True, 0)
 
-        sidebar_box.pack_start(scrolledwindow, True, True, 0)
-
-        self.paned.pack2(sidebar_box, resize=True, shrink=True)
+        self.paned.pack2(sidebar_box, resize=True, shrink=False)
 
     def create_text_tags(self):
         tag_table = self.textbuffer.get_tag_table()
