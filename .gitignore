@@ -1,5 +1,4 @@
 AI/.venv
 AI/__pycache__
+AI/.env
 example.txt
-logger/logs
-

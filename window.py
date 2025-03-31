@@ -2,9 +2,16 @@ import gi
 import requests
 import time
 import threading
+from enum import Enum
 
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GLib, Pango
+
+
+class Level(Enum):
+    HIGH = 1
+    MEDIUM = 2
+    LOW = 3
 
 
 class MainWindow(Gtk.Window):
@@ -21,10 +28,46 @@ class MainWindow(Gtk.Window):
         self.create_textview()
         self.create_sidebar()
         self.create_text_tags()
+        self.load_css()
 
         self.paned.set_position(int(0.55 * 1000))
 
         self.suggestions = {}
+        self.level = Level.HIGH
+        self.lvlmp = {
+            "high": "red",
+            "medium": "yellow",
+            "low": "green",
+        }
+
+    def load_css(self):
+        css_provider = Gtk.CssProvider()
+        css_provider.load_from_data(
+            b"""
+            .red {
+                background-color: #FDAB9E;
+            }
+            .yellow {
+                background-color: #FFF0BD;
+            }
+            .green {
+                background-color: #C7DB9C;
+            }
+            .text{
+                color: #000000;
+                padding: 10px;
+            }
+        """
+        )
+
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(),
+            css_provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+        )
+
+    def level_state_handler(self, button, level):
+        self.level = level
 
     def replace_text(self, widget, event, index):
         if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 1:
@@ -57,12 +100,14 @@ class MainWindow(Gtk.Window):
         label.set_xalign(0)
         label.set_justify(Gtk.Justification.LEFT)
         label.set_line_wrap(True)
+        label.get_style_context().add_class("text")
 
         frame = Gtk.Frame()
         frame.set_shadow_type(Gtk.ShadowType.OUT)
         frame.set_margin_start(10)
         frame.set_margin_end(10)
         frame.set_hexpand(True)
+        frame.get_style_context().add_class(self.lvlmp[item["importance"].lower()])
         frame.add(label)
 
         event_box = Gtk.EventBox()
@@ -90,6 +135,9 @@ class MainWindow(Gtk.Window):
 
         for index, item in enumerate(data["suggestions"]):
 
+            if item["importance"] == "none":
+                continue
+
             start_iter = self.textbuffer.get_start_iter()
 
             match = start_iter.forward_search(
@@ -113,7 +161,10 @@ class MainWindow(Gtk.Window):
         try:
             print("[LOG]: Sending request to server")
             GLib.idle_add(self.spinner.start)
-            response = requests.post("http://localhost:8000", json={"text": text})
+            response = requests.post(
+                "http://localhost:8000/chain",
+                json={"text": text, "level": self.level.name.lower()},
+            )
             if response.status_code == 200:
                 data = response.json()
                 GLib.idle_add(self.handle_response, data)
@@ -171,6 +222,21 @@ class MainWindow(Gtk.Window):
 
         self.spinner = Gtk.Spinner()
         sidebar_box.pack_start(self.spinner, False, False, 5)
+
+        button_container = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
+        self.button_high = Gtk.Button.new_with_mnemonic("_High")
+        self.button_medium = Gtk.Button.new_with_mnemonic("_Medium")
+        self.button_low = Gtk.Button.new_with_mnemonic("_Low")
+
+        self.button_high.connect("clicked", self.level_state_handler, Level.HIGH)
+        self.button_medium.connect("clicked", self.level_state_handler, Level.MEDIUM)
+        self.button_low.connect("clicked", self.level_state_handler, Level.LOW)
+
+        button_container.pack_start(self.button_high, True, True, 0)
+        button_container.pack_start(self.button_medium, True, True, 0)
+        button_container.pack_start(self.button_low, True, True, 0)
+
+        sidebar_box.pack_start(button_container, False, False, 0)
 
         self.scrolledwindow = Gtk.ScrolledWindow()
         self.scrolledwindow.set_hexpand(True)

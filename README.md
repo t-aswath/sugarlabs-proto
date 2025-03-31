@@ -86,7 +86,6 @@ AI/                    # Backend
   ├── model.py         # AI model integration
   ├── pdtypes.py       # Pydantic schemas
   ├── requirements.txt # Dependencies
-logger/                # Logging utilities
 .gitignore             # Git ignore rules
 README.md              # Project documentation
 run.sh                 # Shell script to run the project
