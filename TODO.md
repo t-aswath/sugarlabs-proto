@@ -10,16 +10,16 @@
     - **OPTIONS**:
         - **use GREP**
         - ~~improve models reponse by providing more context~~
-- [ ] Improve JSON response formatting.
+- [x] Improve JSON response formatting.
     - [x] Pydantic schema
-    - [~] OutputFixingParser
+    - [x] OutputFixingParser
     - [x] Better prompt
-- [ ] Logging
+- [x] Logging
 
 # CHORE
 
 - [x] Gtk Cleanup
-- [X] Use langchain_ollama instead of ollama-python
+- [x] Use langchain_ollama instead of ollama-python
 - [x] Backend cleanup
     - [x] Remove unused code
     - [x] Remove unused imports
@@ -27,7 +27,7 @@
 
 # SUGGESTIONS
 
-- [ ] (Walter) Make the `reason` child friendly aka use of simpler words to make it more understandable.
+- [x] (Walter) Make the `reason` child friendly aka use of simpler words to make it more understandable.
     - **OPTIONS**:
         - Passing the reasons through llm using `abatch`
           ` and `prompt` to simplify the language.

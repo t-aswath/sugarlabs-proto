@@ -21,6 +21,8 @@ This project is a **Add an AI-assistant to the Write Activity Prototype** that d
 - [Iteration 1 (youtube)](https://youtu.be/bcr_ln06yr8) 
 - [Iteration 2 (youtube)](https://youtu.be/g9cTgEII5sc) 
 - [Iteration 3 (youtube)](https://youtu.be/FP7PB_yGwtI) 
+- [Iteration 4 (youtube)](https://youtu.be/6NXY-K1Xa5U) 
+- [Playlist (youtube)](https://www.youtube.com/playlist?list=PL2IxKiImQiEEiUDNh59KfaycFgdrdyGd7)
 
 # Features
 - **Real-time grammar checking**: Detects errors as the user types.
@@ -29,6 +31,9 @@ This project is a **Add an AI-assistant to the Write Activity Prototype** that d
 - **Sidebar results panel**: Displays grammar errors and explanations.
 - **Spinner indicator**: Shows the status of the grammar check request.
 - **Auto-complete suggestions**: Provides context-aware corrections.
+- **Logger using LangSmith**: Logs the grammar check request and response.
+- **Refactoring results**: According to users reading level.
+- **Color indication**: For different types of errors.
 
 # Tech Stack
 - **Backend**: FastAPI, Python, Ollama (Llama3.2:3B model)
@@ -60,6 +65,11 @@ This project is a **Add an AI-assistant to the Write Activity Prototype** that d
 - **Enhanced result formatting** for better readability.
 - **Used Pydantic schemas** for JSON response formatting.
 - **Refactored** the **backend** for better performance and readability.
+
+# Achievements in Iteration 4
+- **Added logging**.
+- **Color indication** for different types of errors.
+- **Refactoring results** according to users reading level.
 
 # Limitations
 - **Model response time**: The AI model processing may introduce delays.
